@@ -1,0 +1,15 @@
+{
+  "blocks": [
+    {"position": [550, 600], "size": [50, 50], "variant": "wood"},
+    {"position": [600, 660], "size": [50, 50], "variant": "glass"},
+    {"position": [550, 500], "size": [50, 50], "variant": "stone"},
+    {"position": [550, 400], "size": [50, 50], "variant": "wood"},
+    {"position": [600, 590], "size": [50, 50], "variant": "glass"},
+    {"position": [650, 500], "size": [50, 50], "variant": "stone"},
+    {"position": [650, 600], "size": [50, 50], "variant": "wood"},
+    {"position": [650, 400], "size": [50, 50], "variant": "wood"}
+  ],
+  "enemies": [
+    {"position": [600, 600], "radius": 18, "hp": 20}
+  ]
+}
