@@ -1,0 +1,26 @@
+{
+  "blocks": [
+    {"position": [1080, 600], "size": [50, 50], "variant": "glass"},
+    {"position": [1130, 600], "size": [50, 50], "variant": "glass"},
+    {"position": [1180, 600], "size": [50, 50], "variant": "glass"},
+    {"position": [1110, 550], "size": [160, 30], "variant": "wood"}
+  ],
+
+  "enemies": [
+    {"position": [1140, 520], "variant": "weak"},
+    {"position": [1200, 520], "variant": "weak"}
+  ],
+
+  "tnts": [],
+
+  "ground_segments": [
+    {"a": [-10000, 440], "b": [200, 440]},
+    {"a": [200, 440], "b": [300, 718]},
+    {"a": [300, 718], "b": [10000, 718]}
+  ],
+
+  "bird_count": 4,
+  "launch_direction": "right",
+  "sling_pos": [180, 220],
+  "idle_position": [420, 320]
+}

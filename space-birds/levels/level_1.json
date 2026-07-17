@@ -1,15 +1,38 @@
 {
   "blocks": [
-    {"position": [550, 600], "size": [50, 50], "variant": "wood"},
-    {"position": [600, 660], "size": [50, 50], "variant": "glass"},
-    {"position": [550, 500], "size": [50, 50], "variant": "stone"},
-    {"position": [550, 400], "size": [50, 50], "variant": "wood"},
-    {"position": [600, 590], "size": [50, 50], "variant": "glass"},
-    {"position": [650, 500], "size": [50, 50], "variant": "stone"},
-    {"position": [650, 600], "size": [50, 50], "variant": "wood"},
-    {"position": [650, 400], "size": [50, 50], "variant": "wood"}
+    {"position": [1040, 610], "size": [50, 50], "variant": "glass"},
+    {"position": [1090, 610], "size": [50, 50], "variant": "glass"},
+    {"position": [1140, 610], "size": [50, 50], "variant": "glass"},
+    {"position": [1190, 610], "size": [50, 50], "variant": "glass"},
+    {"position": [1240, 610], "size": [50, 50], "variant": "glass"},
+    {"position": [1060, 560], "size": [50, 50], "variant": "stone"},
+    {"position": [1110, 560], "size": [50, 50], "variant": "stone"},
+    {"position": [1160, 560], "size": [50, 50], "variant": "stone"},
+    {"position": [1210, 560], "size": [50, 50], "variant": "stone"},
+    {"position": [1260, 560], "size": [50, 50], "variant": "stone"},
+    {"position": [1100, 510], "size": [110, 30], "variant": "wood"},
+    {"position": [1215, 510], "size": [110, 30], "variant": "wood"}
   ],
+
   "enemies": [
-    {"position": [600, 600], "radius": 18, "hp": 20}
-  ]
+    {"position": [1180, 475], "variant": "weak"},
+    {"position": [1260, 475], "variant": "medium"}
+  ],
+
+  "tnts": [
+
+    
+    
+  ],
+
+  "ground_segments": [
+    {"a": [-10000, 440], "b": [180, 440]},
+    {"a": [180, 440], "b": [300, 718]},
+    {"a": [300, 718], "b": [10000, 718]}
+  ],
+
+  "bird_count": 5,
+  "launch_direction": "right",
+  "sling_pos": [180, 220],
+  "idle_position": [380, 320]
 }

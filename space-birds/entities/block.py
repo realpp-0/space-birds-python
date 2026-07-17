@@ -6,9 +6,10 @@ class Block:
     COLLISION_TYPE = 1
 
     VARIANTS = {
-        'wood': {'mass': 2, 'elasticity': 0.05, 'friction': 0.8, 'hp': 300},
-        'glass': {'mass': 1, 'elasticity': 0.2, 'friction': 0.3, 'hp': 100},
-        'stone': {'mass': 4, 'elasticity': 0.01, 'friction': 1.0, 'hp': 600},
+        # tuned for power scaling: wood < stone, glass breaks easily
+        'wood': {'mass': 2, 'elasticity': 0.05, 'friction': 0.8, 'hp': 160},
+        'glass': {'mass': 1, 'elasticity': 0.2, 'friction': 0.3, 'hp': 60},
+        'stone': {'mass': 4, 'elasticity': 0.01, 'friction': 1.0, 'hp': 280},
     }
 
     def __init__(self, space, position, size=(50, 50), variant='wood'):
@@ -31,15 +32,19 @@ class Block:
         self.shape.collision_type = self.COLLISION_TYPE
 
         # hit points
-        self.hp = props.get('hp', 10)
+        self.hp = props.get('hp', 10) * (self.size[0] * self.size[1]) / 3200
 
+        self.removed = False
         space.add(self.body, self.shape)
+        self.on_ground = False
+        self.ground_contacts = 0
 
     def remove(self):
         try:
             self.space.remove(self.body, self.shape)
         except Exception:
             pass
+        self.removed = True
 
     def take_damage(self, amount):
         self.hp -= amount
