@@ -2,6 +2,7 @@ import os
 
 import pymunk
 import pygame
+from core.constants import *
 
 pygame.mixer.init()  # Initialize the mixer module for sound playback
 explosion_sound = pygame.mixer.Sound(os.path.join(SOUNDS, "explosion.wav"))
