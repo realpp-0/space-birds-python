@@ -5,9 +5,9 @@ from core.constants import *
 import core.particle_manager as particle_manager
 
 pygame.mixer.init()  # Initialize the mixer module for sound playback
-wood_break_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "wood_break.wav"))
-glass_break_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "glass_break.wav"))
-stone_break_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "stone_break.wav"))
+wood_break_sound = pygame.mixer.Sound(os.path.join(SOUNDS, "wood_break.wav"))
+glass_break_sound = pygame.mixer.Sound(os.path.join(SOUNDS, "glass_break.wav"))
+stone_break_sound = pygame.mixer.Sound(os.path.join(SOUNDS, "stone_break.wav"))
 
 
 class Block:

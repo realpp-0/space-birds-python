@@ -1,3 +1,10 @@
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ASSETS = os.path.join(BASE_DIR, "assets")
+SOUNDS = os.path.join(ASSETS, "sounds")
+LEVELS = os.path.join(BASE_DIR, "levels")
+
 WIDTH, HEIGHT = 1280, 760
 FPS = 60
 

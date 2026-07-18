@@ -191,9 +191,8 @@ def main():
         start_level = 1
 
     current_level = start_level
-    levels_dir = os.path.join(os.path.dirname(__file__), 'levels')
     def load_level_index(idx):
-        path = os.path.join(levels_dir, f'level_{idx}.json')
+        path = os.path.join(LEVELS, f'level_{idx}.json')
         return load_level(path)
 
     blocks, enemies, tnts, launch_direction, bird_count, sling_pos, idle_position, ground_segments, destruction_focus, idle_zoom = load_level_index(current_level)

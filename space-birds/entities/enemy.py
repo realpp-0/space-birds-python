@@ -5,7 +5,7 @@ from core.constants import *
 import core.particle_manager as particle_manager
 
 pygame.mixer.init()  # Initialize the mixer module for sound playback
-pig_died_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "pig_death.wav"))
+pig_died_sound = pygame.mixer.Sound(os.path.join(SOUNDS, "pig_death.wav"))
 
 
 class Enemy:

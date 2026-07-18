@@ -6,7 +6,7 @@ from core.constants import *
 import core.particle_manager as particle_manager
 
 pygame.mixer.init()  # Initialize the mixer module for sound playback
-explosion_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "explosion.wav"))
+explosion_sound = pygame.mixer.Sound(os.path.join(SOUNDS, "explosion.wav"))
 
 class TNT:
 
