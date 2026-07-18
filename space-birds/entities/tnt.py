@@ -1,4 +1,12 @@
+import os
+
 import pymunk
+import pygame
+from core.constants import *
+import core.particle_manager as particle_manager
+
+pygame.mixer.init()  # Initialize the mixer module for sound playback
+explosion_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "explosion.wav"))
 
 class TNT:
 
@@ -28,6 +36,7 @@ class TNT:
         self.shape.collision_type = self.COLLISION_TYPE
 
         self.hp = props.get('hp', 10)
+        self.tnt_score = int(2000 * props.get('multiplier', 1.0))  # Score for destroying TNT
 
         self.removed = False
         self.exploded = False
@@ -45,18 +54,20 @@ class TNT:
             pass
         self.removed = True
 
-    def explode(self):
+    def explode(self, score_manager = None):
         if self.removed or self.exploded:
             return
         
         self.exploded = True
+        
+        
 
         blast_x, blast_y = self.body.position.x, self.body.position.y
         self.body.velocity = (0, 0)
         self.body.angular_velocity = 0
 
-        max_damage = 140.0 * self.VARIANTS[self.variant]['multiplier']
-        max_knockback = 350.0 * self.VARIANTS[self.variant]['multiplier']
+        max_damage = 420.0 * self.VARIANTS[self.variant]['multiplier']
+        max_knockback = 1050.0 * self.VARIANTS[self.variant]['multiplier']
         damage_radius = 140.0 * self.VARIANTS[self.variant]['multiplier']
         knockback_radius = 350.0 * self.VARIANTS[self.variant]['multiplier']
 
@@ -79,7 +90,7 @@ class TNT:
                 damage = max_damage * damage_falloff
                 if entity is not None and hasattr(entity, "take_damage") and callable(getattr(entity, "take_damage")):
                     try:
-                        entity.take_damage(damage)
+                        entity.take_damage(damage, score_manager)
                     except Exception:
                         pass
 
@@ -96,68 +107,20 @@ class TNT:
                         body.velocity.y + ny * knockback,
                     )
 
-        self.remove()
-
-    def explode(self):
-        if self.removed or self.exploded:
-            return
-        
-        self.exploded = True
-
-        blast_x, blast_y = self.body.position.x, self.body.position.y
-        self.body.velocity = (0, 0)
-        self.body.angular_velocity = 0
-
-        max_damage = 175.0 * self.VARIANTS[self.variant]['multiplier']
-        max_knockback = 260.0 * self.VARIANTS[self.variant]['multiplier']
-        damage_radius = 130.0 * self.VARIANTS[self.variant]['multiplier']
-        knockback_radius = 260.0 * self.VARIANTS[self.variant]['multiplier']
-
-        for shape in list(getattr(self.space, "shapes", [])):
-            body = getattr(shape, "body", None)
-            if body is None or body is self.body:
-                continue
-            if body.body_type == pymunk.Body.STATIC:
-                continue
-
-            dx = body.position.x - blast_x
-            dy = body.position.y - blast_y
-            dist = (dx * dx + dy * dy) ** 0.5
-            if dist <= 0:
-                continue
-
-            entity = getattr(shape, "entity", None)
-            if dist <= damage_radius:
-                damage_falloff = 1.0 - (dist / damage_radius)
-                damage = max_damage * damage_falloff
-                if entity is not None and hasattr(entity, "take_damage") and callable(getattr(entity, "take_damage")):
-                    try:
-                        entity.take_damage(damage * 7)
-                    except Exception:
-                        pass
-
-            if dist <= knockback_radius:  # Knockback radius
-                knockback_falloff = 1.0 - (dist / knockback_radius)
-                knockback = max_knockback * knockback_falloff * 5
-                nx = dx / dist
-                ny = dy / dist
-                if body.body_type == pymunk.Body.DYNAMIC:
-                    body.apply_impulse_at_local_point((nx * knockback, ny * knockback), (0, 0))
-                else:
-                    body.velocity = (
-                        body.velocity.x + nx * knockback,
-                        body.velocity.y + ny * knockback,
-                    )
 
         self.remove()
 
 
-    def take_damage(self, amount):
+    def take_damage(self, amount, score_manager = None):
         self.hp -= amount
         
         if self.hp <= 0:
             
-            self.explode()
+            self.explode(score_manager)
+            explosion_sound.play()
+            particle_manager.tnt_particles(self.body.position)
+            if score_manager is not None:
+                score_manager.add_score(self.tnt_score)
             return True
         return False
     

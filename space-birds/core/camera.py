@@ -3,7 +3,7 @@ import random
 
 class Camera:
 
-    def __init__(self, width, height, idle_position):
+    def __init__(self, width, height, idle_position, idle_zoom=1.0):
         self.x = 0
         self.y = 0
 
@@ -11,10 +11,11 @@ class Camera:
         self.height = height
 
         self.zoom = 1
+        self.idle_zoom = idle_zoom
 
         self.target_x = 0
         self.target_y = 0
-        self.target_zoom = 0.8
+        self.target_zoom = idle_zoom
 
         self.state = "idle"
 
@@ -57,7 +58,7 @@ class Camera:
     def update_idle(self):
         self.target_x = self.idle_x
         self.target_y = self.idle_y
-        self.target_zoom = 1
+        self.target_zoom = self.idle_zoom
 
     def update_follow(self):
         if self.follow_target is None:
@@ -122,7 +123,7 @@ class Camera:
         self.destruction_timer += dt
         self.target_x = self.last_focus_x
         self.target_y = self.last_focus_y
-        self.target_zoom = 1.0  # Zoom out to 1x to see the full destruction
+        self.target_zoom = 0.75  # Zoom out to 0.75x to see the full destruction
         
         if self.destruction_timer >= self.destruction_duration:
             self.state = "return"
@@ -135,22 +136,22 @@ class Camera:
         if self.return_timer < self.return_delay:
             self.target_x = self.last_focus_x
             self.target_y = self.last_focus_y
-            self.target_zoom = 1.0
+            self.target_zoom = 0.75  # Maintain zoom out during return delay
             return
 
         self.target_x = self.idle_x
         self.target_y = self.idle_y
-        self.target_zoom = 1.0
+        self.target_zoom = self.idle_zoom
         
         # Check if we've reached idle state (within threshold)
         dx = abs(self.x - self.idle_x)
         dy = abs(self.y - self.idle_y)
-        dz = abs(self.zoom - 1.0)
+        dz = abs(self.zoom - self.idle_zoom)
         if dx < 5 and dy < 5 and dz < 0.01:
             self.state = "idle"
             self.x = self.idle_x
             self.y = self.idle_y
-            self.zoom = 1.0
+            self.zoom = self.idle_zoom
             self.return_timer = 0.0
         
     

@@ -23,5 +23,6 @@
   "bird_count": 3,
   "launch_direction": "right",
   "sling_pos": [180, 260],
-  "idle_position": [420, 320]
+  "idle_position": [420, 320],
+  "idle_zoom": 0.8
 }

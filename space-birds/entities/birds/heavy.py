@@ -6,7 +6,7 @@ class HeavyBird(Bird):
     PROPS = {
         "mass": 16,
         "radius": 26,
-        "launch_boost": 12,
+        "launch_boost": 10,
         "damage_multiplier": 1.75,
     }
 

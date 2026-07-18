@@ -6,7 +6,7 @@ class DefaultBird(Bird):
     PROPS = {
         "mass": 4,
         "radius": 20,
-        "launch_boost": 10,
+        "launch_boost": 12,
         "damage_multiplier": 1.0,
     }
 

@@ -1,10 +1,19 @@
 import pymunk
+import os
+import pygame
+from core.constants import *
+import core.particle_manager as particle_manager
+
+pygame.mixer.init()  # Initialize the mixer module for sound playback
+wood_break_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "wood_break.wav"))
+glass_break_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "glass_break.wav"))
+stone_break_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "stone_break.wav"))
 
 
 class Block:
     # collision type for blocks
     COLLISION_TYPE = 1
-
+    
     VARIANTS = {
         # tuned for power scaling: wood < stone, glass breaks easily
         'wood': {'mass': 2, 'elasticity': 0.05, 'friction': 0.8, 'hp': 160},
@@ -34,6 +43,10 @@ class Block:
         # hit points
         self.hp = props.get('hp', 10) * (self.size[0] * self.size[1]) / 3200
 
+        self.glass_score = GLASS_SCORE
+        self.wood_score = WOOD_SCORE
+        self.stone_score = STONE_SCORE
+
         self.removed = False
         space.add(self.body, self.shape)
         self.on_ground = False
@@ -46,9 +59,24 @@ class Block:
             pass
         self.removed = True
 
-    def take_damage(self, amount):
+    def take_damage(self, amount, score_manager = None):
         self.hp -= amount
         if self.hp <= 0:
+            if self.variant == 'wood':
+                wood_break_sound.play()
+                particle_manager.wood_particles(self.body.position)
+                if score_manager is not None:
+                    score_manager.add_score(self.wood_score)
+            if self.variant == 'glass':
+                particle_manager.glass_particles(self.body.position)
+                glass_break_sound.play()
+                if score_manager is not None:
+                    score_manager.add_score(self.glass_score)
+            if self.variant == 'stone':
+                particle_manager.stone_particles(self.body.position)
+                stone_break_sound.play()
+                if score_manager is not None:
+                    score_manager.add_score(self.stone_score)
             self.remove()
             return True
         return False

@@ -1,8 +1,16 @@
 import pymunk
+import os
+import pygame
+from core.constants import *
+import core.particle_manager as particle_manager
+
+pygame.mixer.init()  # Initialize the mixer module for sound playback
+pig_died_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "pig_death.wav"))
 
 
 class Enemy:
     COLLISION_TYPE = 2
+    
 
     VARIANTS = {
         'weak': {'radius': 18, 'mass': 3, 'hp': 150, 'elasticity': 0.2, 'friction': 0.6},
@@ -15,6 +23,10 @@ class Enemy:
         self.position = position
         self.variant = variant if variant in self.VARIANTS else 'weak'
         props = self.VARIANTS[self.variant]
+
+        self.weak_score = WEAK_PIG_SCORE
+        self.medium_score = MEDIUM_PIG_SCORE
+        self.strong_score = STRONG_PIG_SCORE
 
         self.radius = props['radius']
         self.mass = props['mass']
@@ -44,9 +56,13 @@ class Enemy:
             pass
         self.removed = True
 
-    def take_damage(self, amount):
+    def take_damage(self, amount, score_manager = None):
         self.hp -= amount
         if self.hp <= 0:
+            pig_died_sound.play()
+            particle_manager.pig_particles(self.body.position)
+            if score_manager is not None:
+                score_manager.add_score(getattr(self, f'{self.variant}_score'))  # Add score based on the variant of the enemy
             self.remove()
             return True
         return False

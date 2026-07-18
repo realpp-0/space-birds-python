@@ -1,4 +1,9 @@
 import pymunk
+import os
+import pygame
+
+pygame.mixer.init()  # Initialize the mixer module for sound playback
+launch_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "launch.wav"))
 
 
 class Bird:
@@ -135,7 +140,7 @@ class Bird:
         self.dragging = False
         self.launched = True
         self.spawned_next = False
-
+        launch_sound.play()
     def reset(self):
         try:
             self.space.remove(self.body, self.shape)

@@ -1,4 +1,10 @@
+import os
+
 import pymunk
+import pygame
+
+pygame.mixer.init()  # Initialize the mixer module for sound playback
+explosion_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "explosion.wav"))
 
 from .bird import Bird
 
@@ -8,7 +14,7 @@ class ExploderBird(Bird):
     PROPS = {
         "mass": 3,
         "radius": 18,
-        "launch_boost": 9,
+        "launch_boost": 11,
         "damage_multiplier": 0.8,
     }
     DAMAGE_SCALE = 0.0085
@@ -32,6 +38,7 @@ class ExploderBird(Bird):
             return
 
         self.exploded = True
+        explosion_sound.play()
         blast_x, blast_y = self.body.position.x, self.body.position.y
         self.body.velocity = (0, 0)
         self.body.angular_velocity = 0

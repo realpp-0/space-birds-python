@@ -7,24 +7,45 @@ import math
 import sys
 
 from core.camera import Camera
+from ui.hud import draw_hud
+from ui.end_screen import draw_end_screen
+from core.score_manager import ScoreManager
+from core.constants import *
+import core.particle_manager as particle_manager
 
-WIDTH, HEIGHT = 1280, 760
-FPS = 60
+
 
 
 
 def main():
     # Set up the game window
     pygame.init()
+    pygame.mixer.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Space Birds")
     clock = pygame.time.Clock()
+    gradient = pygame.Surface((WIDTH, HEIGHT))
+    score_manager = ScoreManager()  # Initialize the ScoreManager
+    
+    for y in range(HEIGHT):
+
+        t = y / HEIGHT
+
+        r = int((1 - t) * 25 + t * 5)
+        g = int((1 - t) * 15 + t * 5)
+        b = int((1 - t) * 55 + t * 15)
+        color = (r, g, b)
+        pygame.draw.line(gradient, color, (0, y), (WIDTH, y))
 
     # Set up the physics space
     space = pymunk.Space()
     space.gravity = (0, 500)  # Gravity pointing downwards
 
     debug_font = pygame.font.SysFont('consolas', 16)
+
+    
+    win_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "win.wav"))
+    lose_sound = pygame.mixer.Sound(os.path.join("space-birds", "assets", "sounds", "lose.wav"))
 
 
     from entities.birds.bird import create_bird
@@ -52,25 +73,10 @@ def main():
         spawn_reserved += 1
         spawn_timer = SPAWN_DELAY
     
-    BIRD_RESPAWN_SPEED = 100
-    BIRD_REMOVE_SPEED = 5
-    TRAIL_MAX_POINTS = 40
-    TRAJECTORY_DT = 0.05
-    # Delay before auto-spawning the next bird (seconds)
-    SPAWN_DELAY = 1.5
-    # Small grace periods to avoid immediate spawn/camera changes right after launch
-    SPAWN_GRACE = 0.25
-    CAMERA_LAUNCH_GRACE = 0.35
+    
     spawn_reserved = 0
     spawn_timer = 0.0
-    MIN_LAUNCH_DISTANCE = 25
-    OFFSCREEN_MARGIN = 80
-    ROLLING_FRICTION = 0.736  # Tweak here: lower = stronger rolling friction, higher = less friction
-    AIR_DRAG = 0.992  # Tweak here: lower = stronger air drag, higher = less drag
-    WIND_STRENGTH = 18.0  # Tweak here: larger = stronger horizontal wind
-    NON_BIRD_COLLISION_DAMAGE = 0.05  # Tweak here: lower = weaker pig/block damage against each other
-    NON_BIRD_TARGET_DAMAGE = 0.03  # Tweak here: lower = weaker pig/block damage taken on impact
-    BIRD_TARGET_DAMAGE = 0.08  # Tweak here: higher = birds break blocks easier without changing bird-to-bird damage
+    
 
     def attempt_launch(bird):
         if not bird.dragging:
@@ -145,6 +151,7 @@ def main():
         bird_count = data.get('bird_count', 5)
         sling_pos = data.get('sling_pos', [150, 460])
         idle_position = data.get('idle_position', [500, 500])
+        idle_zoom = data.get('idle_zoom', 1.0)
         # Optional destruction focus for camera (near structure center)
         destruction_focus = data.get('destruction_focus', None)
         if destruction_focus is None:
@@ -172,7 +179,7 @@ def main():
                 destruction_focus = (avgx, avgy - 40)
             else:
                 destruction_focus = None
-        return blocks, enemies, tnts, launch_direction, bird_count, sling_pos, idle_position, ground_segments, destruction_focus
+        return blocks, enemies, tnts, launch_direction, bird_count, sling_pos, idle_position, ground_segments, destruction_focus, idle_zoom
 
     # Level progression: read optional level index from argv
     LEVEL_COUNT = 8
@@ -189,8 +196,8 @@ def main():
         path = os.path.join(levels_dir, f'level_{idx}.json')
         return load_level(path)
 
-    blocks, enemies, tnts, launch_direction, bird_count, sling_pos, idle_position, ground_segments, destruction_focus = load_level_index(current_level)
-    camera = Camera(WIDTH, HEIGHT, idle_position)
+    blocks, enemies, tnts, launch_direction, bird_count, sling_pos, idle_position, ground_segments, destruction_focus, idle_zoom = load_level_index(current_level)
+    camera = Camera(WIDTH, HEIGHT, idle_position, idle_zoom)
     # provide the camera with the level's preferred destruction focus point
     try:
         camera.destruction_focus = destruction_focus
@@ -207,6 +214,7 @@ def main():
     resolution_focus = None
     # Level progression state
     awaiting_next_level = False
+    level_lost = False
     level_won = False
     motion_time = 0.0
 
@@ -330,6 +338,8 @@ def main():
             a = camera.world_to_screen(ground.a)
             b = camera.world_to_screen(ground.b)
             pygame.draw.line(screen, (80, 80, 80), (int(a[0]), int(a[1])), (int(b[0]), int(b[1])), 5)
+
+        particle_manager.update_particles(1 / FPS, screen, camera)  # Update and draw particles
             
         # draw trails for birds first (so trails sit behind entities)
         for b in birds:
@@ -396,37 +406,39 @@ def main():
 
     def draw_debug_overlay():
         # Show debug info even if no active bird exists
-        bird = active_bird
-        if bird is not None:
-            try:
-                speed = (bird.body.velocity.x ** 2 + bird.body.velocity.y ** 2) ** 0.5
-            except Exception:
-                speed = 0.0
-            stats = [
-                f"Bird: {bird.variant}",
-                f"Mass: {bird.mass:.2f}",
-                f"Radius: {bird.radius}",
-                f"Launch boost: {bird.launch_boost}",
-                f"Speed: {speed:.1f} px/s",
-            ]
-        else:
-            stats = [
-                f"Bird: (none)",
-                f"Mass: -",
-                f"Radius: -",
-                f"Launch boost: -",
-                f"Speed: 0.0 px/s",
-            ]
-        # Add birds left and enemies destroyed to debug stats
-        stats.append(f"Birds left: {bird_count}")
-        stats.append(f"Enemies destroyed: {enemies_destroyed}")
-        panel_x = WIDTH - 240
-        panel_y = 20
-        pygame.draw.rect(screen, (20, 20, 20), (panel_x, panel_y, 220, 95), border_radius=8)
-        pygame.draw.rect(screen, (255, 255, 255), (panel_x, panel_y, 220, 95), 1, border_radius=8)
-        for index, line in enumerate(stats):
-            text = debug_font.render(line, True, (255, 255, 255))
-            screen.blit(text, (panel_x + 10, panel_y + 10 + index * 15))
+        DEBUG = False
+        if DEBUG:
+            bird = active_bird
+            if bird is not None:
+                try:
+                    speed = (bird.body.velocity.x ** 2 + bird.body.velocity.y ** 2) ** 0.5
+                except Exception:
+                    speed = 0.0
+                stats = [
+                    f"Bird: {bird.variant}",
+                    f"Mass: {bird.mass:.2f}",
+                    f"Radius: {bird.radius}",
+                    f"Launch boost: {bird.launch_boost}",
+                    f"Speed: {speed:.1f} px/s",
+                ]
+            else:
+                stats = [
+                    f"Bird: (none)",
+                    f"Mass: -",
+                    f"Radius: -",
+                    f"Launch boost: -",
+                    f"Speed: 0.0 px/s",
+                ]
+            # Add birds left and enemies destroyed to debug stats
+            stats.append(f"Birds left: {bird_count}")
+            stats.append(f"Enemies destroyed: {enemies_destroyed}")
+            panel_x = WIDTH - 240
+            panel_y = 20
+            pygame.draw.rect(screen, (20, 20, 20), (panel_x, panel_y, 220, 95), border_radius=8)
+            pygame.draw.rect(screen, (255, 255, 255), (panel_x, panel_y, 220, 95), 1, border_radius=8)
+            for index, line in enumerate(stats):
+                text = debug_font.render(line, True, (255, 255, 255))
+                screen.blit(text, (panel_x + 10, panel_y + 10 + index * 15))
 
     def begin_destruction_view(focus_pos=None):
         # default hold for 2.5s so destruction and shake are visible
@@ -443,42 +455,37 @@ def main():
         begin_destruction_view(focus_pos)
 
     def finish_level(is_win):
-        nonlocal game_ended, running, awaiting_next_level, level_won
+        nonlocal game_ended, running, awaiting_next_level, level_won, level_lost
         if game_ended:
             return
+        
         game_ended = True
         if is_win:
             awaiting_next_level = True
             level_won = True
-            # show message instructing player to press Enter for next level
-            pygame.draw.rect(screen, (20, 120, 20), (100, 100, 420, 60))
-            text = debug_font.render("You win! Press Enter to go to the next level.", True, (255, 255, 255))
-            screen.blit(text, (120, 120))
-            pygame.display.flip()
+            score_manager.add_score(bird_count * BIRD_SCORE)  # Add bonus score for remaining birds
+            win_sound.play()
+            
         else:
-            pygame.draw.rect(screen, (120, 20, 20), (100, 100, 300, 60))
-            text = debug_font.render("You lost", True, (255, 255, 255))
-            screen.blit(text, (120, 120))
-            pygame.display.flip()
-            pygame.time.wait(1500)
-            running = False
+            lose_sound.play()
+            level_lost = True
 
     # collision handler: apply damage = relative_velocity * 0.5
     def _post_solve_entity_collision(arbiter, space_, data):
-        for shape in arbiter.shapes:
+        for shape in arbiter.shapes: 
             entity = getattr(shape, 'entity', None)
-            if entity is None:
-                continue
-            other = arbiter.shapes[0] if arbiter.shapes[1] is shape else arbiter.shapes[1]
+            if entity is None: 
+                continue 
+            other = arbiter.shapes[0] if arbiter.shapes[1] is shape else arbiter.shapes[1] 
             other_entity = getattr(other, 'entity', None)
             if other.body.body_type == pymunk.Body.STATIC:
                 continue
-            bx, by = shape.body.velocity
+            bx, by = shape.body.velocity 
             ox, oy = other.body.velocity
-            rvx = bx - ox
-            rvy = by - oy
-            rel_vel = (rvx * rvx + rvy * rvy) ** 0.5
-            if rel_vel < 1:
+            rvx = bx - ox 
+            rvy = by - oy 
+            rel_vel = (rvx * rvx + rvy * rvy) ** 0.5 
+            if rel_vel < 1: 
                 continue
 
             bird_variant = getattr(entity, 'variant', None)
@@ -488,7 +495,7 @@ def main():
             # Bird collision damage (higher)
             is_bird = bird_variant in {'normal', 'quick', 'heavy', 'exploder'}
             if is_bird:
-                damage = (rel_vel / 4) * bird_mass * damage_multiplier * 0.42
+                damage = (rel_vel / 4) * bird_mass * damage_multiplier * 0.42 * 5
             else:
                 # Non-bird collision damage (lower, for enemies/blocks hitting things)
                 damage = (rel_vel / 4) * bird_mass * NON_BIRD_COLLISION_DAMAGE
@@ -518,7 +525,7 @@ def main():
             # Apply damage to the colliding entity (e.g., bird)
             if hasattr(entity, 'take_damage') and callable(getattr(entity, 'take_damage')):
                 try:
-                    entity.take_damage(damage)
+                    entity.take_damage(damage, score_manager)
                 except Exception:
                     pass
 
@@ -533,7 +540,7 @@ def main():
                     # Reduced damage for blocks/enemies being hit by other non-bird bodies
                     other_damage = (rel_vel / 4) * shape.body.mass * NON_BIRD_TARGET_DAMAGE
                 try:
-                    other_entity.take_damage(other_damage)
+                    other_entity.take_damage(other_damage, score_manager)
                 except Exception:
                     pass
 
@@ -564,6 +571,7 @@ def main():
     while running:
         dt = clock.tick(FPS) / 1000.0
         dt = min(dt, 1 / 30.0)  # Limit the maximum delta time to avoid instability
+        
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -623,18 +631,40 @@ def main():
                         # restart the process with next level index to get a clean state
                         python = sys.executable
                         os.execv(python, [python, __file__, str(next_level)])
-                        
+
+            
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+            
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                # restart the current level
+                python = sys.executable
+                os.execv(python, [python, __file__, str(current_level)])
 
         # If awaiting next level, render a persistent overlay and skip updates
         if awaiting_next_level:
+            
             screen.fill((0, 0, 0))
+            screen.blit(gradient, (0, 0))
+            
             draw_world()
-            draw_debug_overlay()
-            pygame.draw.rect(screen, (20, 120, 20), (100, 100, 420, 60))
-            text = debug_font.render("You win! Press Enter to go to the next level.", True, (255, 255, 255))
-            screen.blit(text, (120, 120))
+            draw_hud(screen, current_level, bird_count, len(enemies), score_manager.score)
+            draw_end_screen(screen, level_won, bird_count, score_manager.score)
+
             pygame.display.flip()
             # Skip the rest of the frame, keep waiting for Enter
+            continue
+
+        if not awaiting_next_level and level_lost:
+            # Level lost, show end screen and wait for exit
+
+            screen.fill((0, 0, 0))
+            screen.blit(gradient, (0, 0))
+            draw_world()
+            draw_hud(screen, current_level, bird_count, len(enemies), score_manager.score)
+            draw_end_screen(screen, level_won, bird_count, score_manager.score)
+
+            pygame.display.flip()
             continue
 
         # Update birds and spawn new ones when allowed
@@ -833,9 +863,11 @@ def main():
 
         # Clear the screen
         screen.fill((0, 0, 0))
+        screen.blit(gradient, (0, 0))
 
         draw_world()
         draw_debug_overlay()
+        draw_hud(screen, current_level, bird_count, len(enemies), score_manager.score)
 
         # Update the display
         pygame.display.flip()
