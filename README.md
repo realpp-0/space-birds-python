@@ -48,9 +48,10 @@ A physics-based destruction game inspired by Angry Birds, built from scratch in 
 
 ## Current Version
 
-**v1.0.0 – First Public Prototype**
+**v1.0.1 – Asset path hotfix**
 
-This release establishes the core gameplay loop. Future updates will introduce the planned space mechanics, additional birds, planets, a level editor, and more polished content.
+This release fixes path error while loading assets.
+No gameplay was added
 
 ---
 
