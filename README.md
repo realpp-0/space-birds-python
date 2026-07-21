@@ -78,6 +78,10 @@ No gameplay was added
 
 Space Birds is an ongoing personal project and will continue to receive updates.
 
+🔴 Active Issues
+
+Launching program through file explorer returns a path error. This bug only affects file explorer and IDLE, VS Code still runs this program. For the while being, **PLEASE USE VS CODE TO LAUNCH THE PROGRAM**
+
 ---
 
 Made with ❤️ using Python.
