@@ -29,6 +29,7 @@ A physics-based destruction game inspired by Angry Birds, built from scratch in 
 | R | Restart level |
 | Esc | Exit level |
 | Enter | Continue after winning |
+| E | Special ability for birds |
 
 ---
 
